@@ -115,9 +115,10 @@ sub new
 $input is a GenomeComparison.BuildPangenomeParams
 $return is a GenomeComparison.BuildPangenomeResult
 BuildPangenomeParams is a reference to a hash where the following keys are defined:
-	genomes has a value which is a reference to a list where each element is a string
-	genome_workspace has a value which is a reference to a list where each element is a string
+	genome_refs has a value which is a reference to a list where each element is a string
+	genomeset_ref has a value which is a string
 	workspace has a value which is a string
+	output_id has a value which is a string
 BuildPangenomeResult is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -132,9 +133,10 @@ BuildPangenomeResult is a reference to a hash where the following keys are defin
 $input is a GenomeComparison.BuildPangenomeParams
 $return is a GenomeComparison.BuildPangenomeResult
 BuildPangenomeParams is a reference to a hash where the following keys are defined:
-	genomes has a value which is a reference to a list where each element is a string
-	genome_workspace has a value which is a reference to a list where each element is a string
+	genome_refs has a value which is a reference to a list where each element is a string
+	genomeset_ref has a value which is a string
 	workspace has a value which is a string
+	output_id has a value which is a string
 BuildPangenomeResult is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -212,10 +214,8 @@ BuildPangenomeResult is a reference to a hash where the following keys are defin
 $params is a GenomeComparison.CompareGenomesParams
 $return is a GenomeComparison.CompareGenomesResult
 CompareGenomesParams is a reference to a hash where the following keys are defined:
-	pangenome_id has a value which is a string
-	pangenome_ws has a value which is a string
-	protcomp_id has a value which is a string
-	protcomp_ws has a value which is a string
+	pangenome_ref has a value which is a string
+	protcomp_ref has a value which is a string
 	output_id has a value which is a string
 	workspace has a value which is a string
 CompareGenomesResult is a reference to a hash where the following keys are defined:
@@ -232,10 +232,8 @@ CompareGenomesResult is a reference to a hash where the following keys are defin
 $params is a GenomeComparison.CompareGenomesParams
 $return is a GenomeComparison.CompareGenomesResult
 CompareGenomesParams is a reference to a hash where the following keys are defined:
-	pangenome_id has a value which is a string
-	pangenome_ws has a value which is a string
-	protcomp_id has a value which is a string
-	protcomp_ws has a value which is a string
+	pangenome_ref has a value which is a string
+	protcomp_ref has a value which is a string
 	output_id has a value which is a string
 	workspace has a value which is a string
 CompareGenomesResult is a reference to a hash where the following keys are defined:
@@ -370,9 +368,10 @@ sub _validate_version {
 
 <pre>
 a reference to a hash where the following keys are defined:
-genomes has a value which is a reference to a list where each element is a string
-genome_workspace has a value which is a reference to a list where each element is a string
+genome_refs has a value which is a reference to a list where each element is a string
+genomeset_ref has a value which is a string
 workspace has a value which is a string
+output_id has a value which is a string
 
 </pre>
 
@@ -381,9 +380,10 @@ workspace has a value which is a string
 =begin text
 
 a reference to a hash where the following keys are defined:
-genomes has a value which is a reference to a list where each element is a string
-genome_workspace has a value which is a reference to a list where each element is a string
+genome_refs has a value which is a reference to a list where each element is a string
+genomeset_ref has a value which is a string
 workspace has a value which is a string
+output_id has a value which is a string
 
 
 =end text
@@ -438,10 +438,8 @@ pg_ref has a value which is a string
 
 <pre>
 a reference to a hash where the following keys are defined:
-pangenome_id has a value which is a string
-pangenome_ws has a value which is a string
-protcomp_id has a value which is a string
-protcomp_ws has a value which is a string
+pangenome_ref has a value which is a string
+protcomp_ref has a value which is a string
 output_id has a value which is a string
 workspace has a value which is a string
 
@@ -452,10 +450,8 @@ workspace has a value which is a string
 =begin text
 
 a reference to a hash where the following keys are defined:
-pangenome_id has a value which is a string
-pangenome_ws has a value which is a string
-protcomp_id has a value which is a string
-protcomp_ws has a value which is a string
+pangenome_ref has a value which is a string
+protcomp_ref has a value which is a string
 output_id has a value which is a string
 workspace has a value which is a string
 
