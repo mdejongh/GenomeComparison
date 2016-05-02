@@ -146,10 +146,17 @@ sub build_pangenome
 	die "Error loading genomeset from workspace:\n".$@;
     }
     if (defined $input->{genome_refs}) {
+	eval {
+	    my @refs;
 	    foreach my $ref (@{$input->{genome_refs}}) {
-		push @genomes, $ref;
-		push @{$provenance->[0]->{'input_ws_objects'}}, $ref;
+		push @refs, {ref=>$ref};
 	    }
+	    my $genomeset_full=$wsClient->get_object_info_new({objects=>\@refs, includeMetadata=>1});
+	    map { push @genomes, $_->[6]."/".$_->[0]."/".$_->[4] } @$genomeset_full;
+	};
+    }
+    if ($@) {
+	die "Error loading genomes from workspace:\n".$@;
     }
 
     my $orthlist = [];
@@ -448,7 +455,7 @@ sub compare_genomes
 	    foreach my $cpx_ref (@$cpx_refs) {
 		my $cpx;
 		foreach my $cpxH (@{$map->{complexes}}) {
-		    if (substr($cpx_ref, $cpxH->{id}) >= 0) {
+		    if (index($cpx_ref, $cpxH->{id}) >= 0) {
 			$cpx = $cpxH;
 			last;
 		    }
@@ -461,7 +468,7 @@ sub compare_genomes
 		    my $role_ref = $roles->[$k]->{role_ref};
 		    my $role;
 		    foreach my $roleH (@{$map->{roles}}) {
-			if (substr($role_ref, $roleH->{id}) >= 0) {
+			if (index($role_ref, $roleH->{id}) >= 0) {
 			    $role = $roleH;
 			    last;
 			}
@@ -471,7 +478,7 @@ sub compare_genomes
 		    }
 		    my $reaction;
 		    foreach my $rxnH (@{$biochemistry->{reactions}}) {
-			if (substr($rxn->{reaction_ref}, $rxnH->{id}) >= 0) {
+			if (index($rxn->{reaction_ref}, $rxnH->{id}) >= 0) {
 			    $reaction = $rxnH;
 			    last;
 			}
@@ -481,7 +488,7 @@ sub compare_genomes
 		    }
 		    my $compartment;
 		    foreach my $cptH (@{$biochemistry->{compartments}}) {
-			if (substr($rxn->{compartment_ref}, $cptH->{id}) >= 0) {
+			if (index($rxn->{compartment_ref}, $cptH->{id}) >= 0) {
 			    $compartment = $cptH;
 			    last;
 			}
@@ -489,11 +496,62 @@ sub compare_genomes
 		    if (! defined $compartment) {
 			die("Couldn't find compartment for $rxn->{compartment_ref}\n");
 		    }
-		    $rolehash->{$role->{name}}->{$reaction->{id}}->{$compartment->{id}} = [$rxn->{direction},$reaction->{definition}];
+		    $rolehash->{$role->{name}}->{$reaction->{id}}->{$compartment->{id}} = [$rxn->{direction},&createEquation($reaction, $biochemistry)];
 		}
 	    }
 	}
 	return $rolehash;
+    }
+
+    sub createEquation {
+	my ($rxn, $bio) = @_;
+	my $rgt = $rxn->{reagents};
+	my $rgtHash;
+	for (my $i=0; $i < @{$rgt}; $i++) {
+	    my $id = (split "/", $rgt->[$i]->{compound_ref})[-1];
+	    if (!defined($rgtHash->{$id}->{(split "/", $rgt->[$i]->{compartment_ref})[-1]})) {
+		$rgtHash->{$id}->{(split "/", $rgt->[$i]->{compartment_ref})[-1]} = 0;
+	    }
+	    $rgtHash->{$id}->{(split "/", $rgt->[$i]->{compartment_ref})[-1]} += $rgt->[$i]->{coefficient};
+	}
+	my @reactcode = ();
+	my @productcode = ();
+	my $sign = " <=> ";
+	$sign = " => " if $rxn->{direction} eq ">";
+	$sign = " <= " if $rxn->{direction} eq "<";
+
+	my %FoundComps=();
+	my $CompCount=0;
+
+	my $sortedCpd = [sort(keys(%{$rgtHash}))];
+	for (my $i=0; $i < @{$sortedCpd}; $i++) {
+
+	    #Cpds sorted on original modelseed identifiers
+	    #But representative strings collected here (if not 'id')
+	    my $printId=$sortedCpd->[$i];
+
+	    my $comps = [sort(keys(%{$rgtHash->{$sortedCpd->[$i]}}))];
+	    for (my $j=0; $j < @{$comps}; $j++) {
+		my $compartment = $comps->[$j];
+		$compartment = "[".$compartment."]";
+
+		if ($rgtHash->{$sortedCpd->[$i]}->{$comps->[$j]} < 0) {
+		    my $coef = -1*$rgtHash->{$sortedCpd->[$i]}->{$comps->[$j]};
+		    my $reactcode = "(".$coef.") ".$printId.$compartment;
+		    push(@reactcode,$reactcode);
+		    
+		} elsif ($rgtHash->{$sortedCpd->[$i]}->{$comps->[$j]} > 0) {
+		    my $coef = $rgtHash->{$sortedCpd->[$i]}->{$comps->[$j]};
+
+		    my $productcode .= "(".$coef.") ".$printId.$compartment;
+		    push(@productcode, $productcode);
+		} 
+	    }
+	}
+
+	my $reaction_string = join(" + ",@reactcode).$sign.join(" + ",@productcode);
+
+	return $reaction_string;
     }
 
     my $orthos;
@@ -784,6 +842,8 @@ sub compare_genomes
 	}
 	$gc->{families}->[$famind->{$fam}] = $families->{$fam};
     }
+
+    print STDERR &Dumper($gc);
 
     my $gc_metadata = $wsClient->save_objects({
 	'workspace' => $workspace_name,
